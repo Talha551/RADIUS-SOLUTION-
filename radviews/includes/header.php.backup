@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title><?php echo $pageTitle; ?></title>
+    <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <!-- Bootstrap 3.3.4 -->
+    <link href="<?php echo base_url(); ?>assets/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
+        
+    <!-- FontAwesome 4.3.0 -->
+    <link href="<?php echo base_url(); ?>assets/bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css" />
+    <!-- Ionicons 2.0.0 -->
+    <link href="<?php echo base_url(); ?>assets/bower_components/Ionicons/css/ionicons.min.css" rel="stylesheet" type="text/css" />
+    <!-- Theme style -->
+    <link href="<?php echo base_url(); ?>assets/dist/css/AdminLTE.min.css" rel="stylesheet" type="text/css" />
+    <!-- AdminLTE Skins. Choose a skin from the css/skins 
+         folder instead of downloading all of them to reduce the load. -->
+    <link href="<?php echo base_url(); ?>assets/dist/css/skins/_all-skins.min.css" rel="stylesheet" type="text/css" />
+
+    <style>
+    	.error{
+    		color:red;
+    		font-weight: normal;
+    	}
+
+      .center-info {
+          text-align: center;
+      }
+      .dataTables_info {
+          float: none; /* Override default float */
+      }
+
+      #columnToggle label {
+      display: inline-block; /* Makes the label and checkbox pairs flow in a line */
+      margin-right: 10px; /* Adds some spacing between the checkbox pairs */
+      }
+
+      #columnToggle input[type="checkbox"] {
+          margin-right: 5px; /* Adds some spacing between the checkbox and its label text */
+      }
+
+      .dataTables_length select {
+          font-family: Arial, sans-serif; /* Example: match your form input font */
+          font-size: 14px; /* Match your form input font size */
+          padding: 6px 12px; /* Match your form input padding */
+          border: 1px solid #ccc; /* Match your form input border */
+          border-radius: 4px; /* Match your form input border radius */
+          /* Add other styles as needed to match your form inputs */
+      }
+
+      .table-container {
+          max-height: 450px;
+          overflow-x: auto;
+      }
+
+    </style>
+    <script src="<?php echo base_url(); ?>assets/bower_components/jquery/dist/jquery.min.js"></script>
+    <script type="text/javascript">
+        var baseURL = "<?php echo base_url(); ?>";
+    </script>
+    
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,300italic,400italic,600italic">
+  
+    
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.20/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.6.1/css/buttons.dataTables.min.css">
+
+    
+
+    <script src="https://cdn.datatables.net/1.10.20/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+    <script src="https://cdn.datatables.net/buttons/1.6.1/js/buttons.html5.min.js"></script>
+  </head>
+  <body class="hold-transition skin-blue sidebar-mini">
+    <div class="wrapper">
+      
+      <header class="main-header">
+        <!-- Logo -->
+        <a href="<?php echo base_url(); ?>" class="logo">
+          <!-- mini logo for sidebar mini 50x50 pixels -->
+          <span class="logo-mini"><b>P</b>TB</span>
+          <!-- logo for regular state and mobile devices -->
+          <span class="logo-lg"><b>RadSpot </b><b>Billing</b></span>
+        </a>
+        <!-- Header Navbar: style can be found in header.less -->
+        <nav class="navbar navbar-static-top" role="navigation">
+          <!-- Sidebar toggle button-->
+          <a href="#" class="sidebar-toggle" data-toggle="push-menu" role="button">
+            <span class="sr-only">Toggle navigation</span>
+          </a>
+          <div class="navbar-custom-menu">
+            <ul class="nav navbar-nav">
+              <li class="dropdown tasks-menu">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                  <i class="fa fa-history"></i>
+                </a>
+                <ul class="dropdown-menu">
+                  <li class="header"> Last Login : <i class="fa fa-clock-o"></i> <?= empty($last_login) ? "First Time Login" : $last_login; ?></li>
+                </ul>
+              </li>
+              <!-- User Account: style can be found in dropdown.less -->
+              <li class="dropdown user user-menu">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                  <img src="<?php echo base_url(); ?>assets/dist/img/avatar.png" class="user-image" alt="User Image"/>
+                  <span class="hidden-xs"><?php echo $name; ?></span>
+                </a>
+                <ul class="dropdown-menu">
+                  <!-- User image -->
+                  <li class="user-header">
+                    
+                    <img src="<?php echo base_url(); ?>assets/dist/img/avatar.png" class="img-circle" alt="User Image" />
+                    <p>
+                      <?php echo $name; ?>
+                      <small><?php echo $role_text; ?></small>
+                    </p>
+                    <p>Balance: Rs.
+                    <?php 
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+                      $this->db->select_sum('amount');
+                      $this->db->from('tbl_invoices');
+                      $this->db->where('managername', $managername);
+                      //echo $this->db->count_all_results();
+                      $query = $this->db->get();
+                      $result = $query->row();
+                      if ($query->num_rows() > 0){
+                        $manager_balance_info = $result->amount;
+                        echo $result->amount;
+                      } else {
+                          echo 0;
+                      }
+                    ?></p>
+                  </li>
+                  <!-- Menu Footer-->
+                  <li class="user-footer">
+                    <div class="pull-left">
+                      <a href="<?php echo base_url(); ?>profile" class="btn btn-warning btn-flat"><i class="fa fa-user-circle"></i> Profile</a>
+                    </div>
+                    <div class="pull-right">
+                      <a href="<?php echo base_url(); ?>logout" class="btn btn-default btn-flat"><i class="fa fa-sign-out"></i> Sign out</a>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </nav>
+      </header>
+      <!-- Left side column. contains the logo and sidebar -->
+
+      <?php 
+          $managername = $this->session->userdata ( 'name' );
+          //Total Customers from Table
+          $this->db->select('perm_editservices, perm_createservices, perm_listservices, perm_createmanagers, perm_listinvoices, perm_addcredits');
+          $this->db->from('rm_managers');
+          $this->db->where('managername', $managername);
+          //echo $this->db->count_all_results();
+          $query = $this->db->get();
+          $managerInfo = $query->row();
+      ?>
+
+      <aside class="main-sidebar">
+        <!-- sidebar: style can be found in sidebar.less -->
+        <section class="sidebar">
+          <!-- sidebar menu: : style can be found in sidebar.less -->
+          <ul class="sidebar-menu" data-widget="tree">
+            <li class="header">MAIN NAVIGATION</li>
+            <li>
+              <a href="<?php echo base_url(); ?>dashboard">
+                <i class="fa fa-dashboard"></i> <span>Dashboard</span></i>
+              </a>
+            </li>
+
+            <!-- 
+
+            <li>
+              <a href="<?php //echo base_url(); ?>usersListing">
+                <i class="fa fa-users"></i>
+                <span>User Management</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="<?php //echo base_url(); ?>userQuickEdit">
+                <i class="fa fa-pencil-square-o"></i>
+                <span>Quick User Management</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="<?php //echo base_url(); ?>userQuickEdit">
+                <i class="fa fa-pencil-square-o"></i>
+                <span>User Groups</span>
+              </a>
+            </li>
+            -->
+
+            <!-- Users Menu -->
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-users"></i> <span>Users Management</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>usersListing/0"><i class="fa fa-user-plus"></i> Manage Users</a></li>
+                <li><a href="<?php echo base_url(); ?>userQuickEdit"><i class="fa fa-fighter-jet"></i> Quick User Management</a></li>
+                <li><a href="<?php echo base_url(); ?>usersGroup"><i class="fa fa-users"></i> Users Group</a></li>
+                
+              </ul>
+            </li>
+
+            <!-- Hotspot Menu -->
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-rss"></i> <span>Prepaid Cards</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>serieslist"><i class="fa fa-list-ol"></i> Batch List</a></li>
+                <li><a href="<?php echo base_url(); ?>cardsListing"><i class="fa fa-list-ol"></i> Cards List</a></li>
+                <?php
+                    //if($managerInfo->perm_createservices == 1)
+                    if($this->session->userdata ( 'name' ) == 'admin')
+                    { ?>
+                      <li><a href="<?php echo base_url(); ?>genusers"><i class="fa fa-user-plus"></i> Generate Cards</a></li>
+                      <li><a href="<?php echo base_url(); ?>importcards"><i class="fa fa-file-text"></i> Import Cards</a></li>
+                    <?php }
+                ?>
+
+                <li class="treeview">
+                  <a href="#"><i class="fa fa-circle-o"></i> Dynamic Wallet Fix
+                    <span class="pull-right-container">
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                  </a>
+                  <ul class="treeview-menu">
+                    <li><a href="<?php echo base_url(); ?>cardfixownership/1"><i class="fa fa-circle-o"></i> One Day</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardfixownership/3"><i class="fa fa-circle-o"></i> 3 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardfixownership/7"><i class="fa fa-circle-o"></i> 7 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardfixownership/15"><i class="fa fa-circle-o"></i> 15 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardfixownership/30"><i class="fa fa-circle-o"></i> 30 Days</a></li>
+                    
+                  </ul>
+                </li>
+
+                <li class="treeview">
+                  <a href="#"><i class="fa fa-circle-o"></i> Re-Check API Users
+                    <span class="pull-right-container">
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                  </a>
+                  <ul class="treeview-menu">
+                    <li><a href="<?php echo base_url(); ?>cardrecheck/1"><i class="fa fa-circle-o"></i> One Day</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardrecheck/3"><i class="fa fa-circle-o"></i> 3 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardrecheck/7"><i class="fa fa-circle-o"></i> 7 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardrecheck/15"><i class="fa fa-circle-o"></i> 15 Days</a></li>
+                    <li><a href="<?php echo base_url(); ?>cardrecheck/30"><i class="fa fa-circle-o"></i> 30 Days</a></li>
+                    
+                  </ul>
+                </li>
+                
+                  
+              </ul>
+              
+            </li>
+
+            <li>
+              <a href="<?php echo base_url(); ?>serviceslist">
+                <i class="fa fa-database"></i>
+                <span>Package Management</span>
+              </a>
+            </li>
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-shopping-bag"></i> <span>Package Management</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>serviceslist"><i class="fa fa-shopping-bag"></i> Package Management</a></li>
+                  <?php if($this->session->userdata ( 'name' ) == 'admin'){ ?>
+                    <li><a href="<?php echo base_url(); ?>serviceslist"><i class="fa fa-tags"></i> Asign Packages</a></li>
+                    <li><a href="<?php echo base_url(); ?>serviceslist"><i class="fa fa-tag"></i> Disalow Packages</a></li>
+                  <?php } ?>
+              </ul>
+            </li>
+
+            <li>
+              <a href="<?php echo base_url(); ?>invoiceListing" >
+                <i class="fa fa-money"></i>
+                <span>Recharge History</span>
+              </a>
+            </li>
+
+            <?php
+            //if($managerInfo->perm_createservices == 1)
+            if($this->ismaster > 0 || $this->session->userdata ( 'name' ) == 'admin')
+            {
+            ?>
+
+            <!--
+            <li>
+              <a href="<?php //echo base_url(); ?>resellerListing">
+                <i class="fa fa-link"></i>
+                <span>Resellers</span>
+              </a>
+            </li>
+
+            <li>
+              <a href="<?php //echo base_url(); ?>credit" >
+                <i class="fa fa-credit-card"></i>
+                <span>Credit Reseller</span>
+              </a>
+            </li> -->
+
+            <!-- Resellers Menu -->
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-handshake-o"></i> <span>Resellers Management</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>resellerListing"><i class="fa fa-list-ol"></i> Reseller Listing</a></li>
+                <li><a href="<?php echo base_url(); ?>credit"><i class="fa fa-credit-card-alt"></i> Credit Reseller</a></li>
+                <li><a href="<?php echo base_url(); ?>managerGroup"><i class="fa fa-user-circle"></i> Manager Group Mapping</a></li>
+              </ul>
+            </li>
+
+
+            <?php } ?>
+
+            <li>
+              <a href="<?php echo base_url(); ?>onlineusers" >
+                <i class="fa fa-internet-explorer"></i>
+                <span>Online Customers</span>
+              </a>
+            </li>
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-print"></i> <span>Reports</span>
+                <span class="pull-right-container">
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>salesReport"><i class="fa fa-money"></i> Sales Report</a></li>
+                <li><a href="<?php echo base_url(); ?>radiusReport"><i class="fa fa-money"></i> Connection Report</a></li>
+                <li><a href="<?php echo base_url(); ?>userFairUseReport"><i class="fa fa-circle-o"></i> FUP Policy Bandwidth Report</a></li>
+                <li><a href="<?php echo base_url(); ?>smsReport"><i class="fa fa-table"></i> SMS Logs Report</a></li>
+                <li><a href="<?php echo base_url(); ?>easypaisalist"><i class="fa fa-circle-o"></i> Easy Paisa List</a></li>
+                <li><a href="<?php echo base_url(); ?>easypaisaCollectionReport"><i class="fa fa-circle-o"></i> EasyPaisa Collection</a></li>
+                <li><a href="<?php echo base_url(); ?>indicatorReport"><i class="fa fa-table"></i> Indicators Report</a></li>
+              </ul>
+            </li>
+
+
+            <!-- Accounts Menu -->
+            <?php
+
+            if($this->accountsmanager == 1 || $managername == 'admin')
+            {
+            ?>
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-university"></i> <span>Accounts</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>accountsdashboard"><i class="fa fa-tachometer"></i> Dashboard</a></li>
+
+                <li><a href="<?php echo base_url(); ?>accountslist"><i class="fa fa-list"></i> Accounts List</a></li>
+
+                <li><a href="<?php echo base_url(); ?>jvslist"><i class="fa fa-money"></i> Transactions List</a></li>
+                <li><a href="<?php echo base_url(); ?>stockList"><i class="fa fa-truck"></i> Stock Management</a></li>
+                <li><a href="<?php echo base_url(); ?>ledgerReport"><i class="fa fa-usd"></i> Accounts Ledger</a></li>
+                <li><a href="<?php echo base_url(); ?>trialBalance"><i class="fa fa-balance-scale"></i> Balance Sheet/Trial Balance</a></li>
+
+              </ul>
+            </li>
+
+            <!-- DMA Control Panel -->
+            <?php
+
+            if($this->accountsmanager == 1 || $managername == 'admin')
+            {
+            ?>
+              <li class="treeview">
+                <a href="#">
+                  <i class="fa fa-cogs"></i> <span>Control Panel</span>
+                  <span class="pull-right-container">
+                    
+
+                    <i class="fa fa-angle-left pull-right"></i>
+                  </span>
+                </a>
+                <ul class="treeview-menu">
+
+                  <li><a href="<?php echo base_url(); ?>main"><i class="fa fa-eye"></i> Main</a></li>
+                  <li><a href="<?php echo base_url(); ?>naslist"><i class="fa fa-unlock"></i> List NAS</a></li>
+                  <li><a href="<?php echo base_url(); ?>dyndnslisting"><i class="fa fa-globe"></i> Dynamic DNS NAS</a></li>
+                  
+
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-eye"></i> Profile Settings
+                      <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                      </span>
+                    </a>
+                    <ul class="treeview-menu">
+                      <li><a href="<?php echo base_url(); ?>profilelist"><i class="fa fa-database"></i>  Profile List</a></li>
+                      <li><a href="<?php echo base_url(); ?>profileadd"><i class="fa fa-tasks"></i>  Profile Add</a></li>
+                      
+                    </ul>
+                  </li>
+
+                  <li class="treeview">
+                    <a href="#"><i class="fa fa-eye"></i> Traffic Reprot
+                      <span class="pull-right-container">
+                        <i class="fa fa-angle-left pull-right"></i>
+                      </span>
+                    </a>
+                    <ul class="treeview-menu">
+                      <li><a href="<?php echo base_url(); ?>findtrafficdata"><i class="fa fa-internet-explorer"></i>  Find Traffic Data</a></li>
+                      <li><a href="<?php echo base_url(); ?>trafficsummery"><i class="fa fa-globe"></i>  Traffic Summery</a></li>
+                      <li><a href="<?php echo base_url(); ?>overalltrafficreport"><i class="fa fa-table"></i> Overall Traffic Report</a></li>
+                      
+                    </ul>
+                  </li>
+                  <li><a href="<?php echo base_url(); ?>usersimport"><i class="fa fa-eye"></i> Users Import</a></li>
+                  <li><a href="<?php echo base_url(); ?>systemsettings"><i class="fa fa-cog"></i> System Settings</a></li>
+                  <li><a href="<?php echo base_url(); ?>radiusonline"><i class="fa fa-cog"></i> Radius Online Users</a></li>
+
+                </ul>
+              </li> <?php } ?>
+
+            
+
+            <?php } 
+
+            if($managername == 'admin' || $this->ismaster > 0)
+            {
+            ?>
+
+            <li><a href="<?php echo base_url(); ?>settingsList"><i class="fa fa-cog"></i> Settings</a></li>
+
+
+            <!-- Payment System -->
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-paypal"></i> <span>Payment System</span>
+                <span class="pull-right-container">
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li class="treeview">
+                  <a href="#"><i class="fa fa-exchange"></i> Easy Paisa
+                    <span class="pull-right-container">
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                  </a>
+                  <ul class="treeview-menu">
+                    <li><a href="<?php echo base_url(); ?>easypaisalist"><i class="fa fa-exchange"></i> Generate List</a></li>
+                    <li><a href="<?php echo base_url(); ?>epimport"><i class="fa fa-upload"></i> Import List</a></li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+
+            <?php } ?>
+
+
+
+            <!-- Support Menu -->
+
+            <li class="treeview">
+              <a href="#">
+                <i class="fa fa-share"></i> <span>Support</span>
+                <span class="pull-right-container">
+                  
+
+                  <i class="fa fa-angle-left pull-right"></i>
+                </span>
+              </a>
+              <ul class="treeview-menu">
+                <li><a href="<?php echo base_url(); ?>sendgroupsms"><i class="fa fa-circle-o"></i> Send SMS</a></li>
+                <li class="treeview">
+                  <a href="#"><i class="fa fa-circle-o"></i> Complaints
+                    <span class="pull-right-container">
+                      <i class="fa fa-angle-left pull-right"></i>
+                    </span>
+                  </a>
+                  <ul class="treeview-menu">
+                    <li><a href="#"><i class="fa fa-circle-o"></i> New Ticket</a></li>
+                    <li><a href="#"><i class="fa fa-circle-o"></i> View Ticket</a></li>
+                    
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            
+          </ul>
+        </section>
+        <!-- /.sidebar -->
+      </aside>

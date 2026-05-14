@@ -1,0 +1,9 @@
+Main {
+  NetworkAccess 1;
+  MaxCPE 1;
+  ClassOfService {
+    ClassID 1;
+    PrivacyEnable 0;
+    {RATECONTROL}
+  }
+}

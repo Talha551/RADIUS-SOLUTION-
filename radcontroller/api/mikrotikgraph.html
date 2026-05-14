@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Live Traffic</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+    <script type="text/javascript" src="https://portal.pace-tel.com/smoothie.js"></script>
+
+
+
+</head>
+
+<body>
+    <main role="main" class="flex-shrink-0">
+        <div class="container">
+            <div class="jumbotron mt-3">
+
+                <div class="container" class="content-wrapper">
+
+
+                    <div class="content-wrapper">
+                        <!-- Content Header (Page header) -->
+
+
+                        <h4>
+
+                            Live Traffic Monitoring
+
+                        </h4>
+
+                        <section class="content-header">
+
+                            <div class="row">
+                                <div class="col-lg-3 col-xs-6">
+                                    <div class="box box-solid box-primary">
+                                        <button type="button" class="btn btn-primary">
+                                            Username <span id="pppoe-username" class="badge badge-light"></span>
+                                            </button>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-xs-8">
+                                    <div class="box box-solid box-primary">
+                                        <button type="button" class="btn btn-primary">
+                                            Max Limit <span id="package" class="badge badge-light">Mbps</span>
+                                            </button>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3 col-xs-10">
+                                    <div class="box box-solid box-primary">
+                                        <button type="button" class="btn btn-primary">
+                                            Server <span id="nasipaddress" class="badge badge-light">ServerIP</span>
+                                            </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr>
+
+                            <div class="col-md-20">
+
+                                <div class="row">
+                                    <div class="col-lg-12 col-xs-12">
+                                        <div class="chart">
+                                            <canvas id="mycanvas" class="w-100 p-0" width="500%" height="150"></canvas>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12 col-xs-12">
+                                        <div class="box box-solid box-primary">
+                                            <div class="box-header">
+                                                <h6 class="box-title">Download</h6>
+                                            </div>
+                                            <div class="box-body">
+                                                <button type="button" id="download" class="btn btn-success">0 Mbps</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-xs-6">
+                                        <div class="box box-solid box-primary">
+                                            <div class="box-header">
+                                                <h6 class="box-title">Upload</h6>
+                                            </div>
+                                            <div class="box-body">
+                                                <button type="button" id="upload" class="btn btn-danger">0 Mbps</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="container">
+                                    <hr>
+                                    <!-- Example row of columns -->
+                                    <div class="row">
+                                        <h2></h2>
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>RX Packets <span id="rx-packets" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>TX Packets <span id="tx-packets" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="row">
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>RX Drops <span id="rx-drops" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>TX Drops <span id="tx-drops" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>RX Errors <span id="rx-error" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-3 col-xs-6">
+                                            <div class="box box-solid box-primary">
+                                                <h5>TX Errors <span id="tx-error" class="badge badge-secondary">0</span></h5>
+                                            </div>
+                                        </div>
+                                        
+                                      </div>
+                                      
+                                    </div>
+                                    <hr>
+                            
+                                  </div> <!-- /container -->
+                            
+
+                            </div>
+                            
+                            <div class="col-lg-3 col-xs-6">
+                                <div class="box box-solid box-primary">
+                                    <div class="box-header">
+                                        <h3 class="box-title"></h3>
+                                    </div>
+                                    <div class="box-body">
+                                        <button type="submit" id="submit" class="btn btn-primary">Start
+                                            Monitoring</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </section>
+                    </div>
+
+
+                    <!--- User Information-->
+                    <script>
+                        const queryString = window.location.search;
+                        console.log(queryString);
+                
+                        const urlParams = new URLSearchParams(queryString);
+                
+                        const username = urlParams.get('username');
+                        const nasipaddress = urlParams.get('serverip');
+                        const package = urlParams.get('package');
+
+                        document.getElementById('pppoe-username').innerText = username;
+                        document.getElementById('package').innerText = package+' Mbps';
+                        document.getElementById('nasipaddress').innerText = nasipaddress;
+
+                        console.log(username);
+                    </script>
+
+
+
+
+
+                    <script src="socket.io/socket.io.js"></script>
+                    <script>
+                        //var smoothie = new SmoothieChart();
+                        var smoothie = new SmoothieChart({
+                            grid: {
+                                strokeStyle: 'rgb(125, 0, 0)',
+                                fillStyle: 'rgb(60, 0, 0)',
+                                lineWidth: 1,
+                                millisPerLine: 250,
+                                verticalSections: 6,
+                            },
+                            labels: {
+                                fillStyle: 'rgb(255, 255, 255)'
+                            }
+                        });
+
+                        smoothie.streamTo(document.getElementById("mycanvas"));
+                        smoothie.streamTo(document.getElementById("mycanvas"), 1000 /*delay*/ );
+
+                        var line1 = new TimeSeries();
+                        var line2 = new TimeSeries();
+
+                        smoothie.addTimeSeries(line1, {
+                            strokeStyle: 'rgb(0, 255, 0)',
+                            fillStyle: 'rgba(0, 255, 0, 0.4)',
+                            lineWidth: 3
+                        });
+
+                        smoothie.addTimeSeries(line2, {
+                            strokeStyle: 'rgb(255, 0, 255)',
+                            fillStyle: 'rgba(255, 0, 255, 0.3)',
+                            lineWidth: 3
+                        });
+
+                        // Data
+
+
+
+                        const socket = io();
+                        socket.on("connect", () => {
+                            console.log(socket.id);
+                        })
+
+
+                        let submit = document.getElementById("submit");
+                        submit.addEventListener("click", () => {
+
+                            socket.emit("connectdevice", nasipaddress);
+
+                            const interval = setInterval(function () {
+                                socket.emit("username", username);
+                            }, 1000)
+                        })
+
+                        var download = [];
+                        var upload = [];
+                        var count = [];
+
+                        socket.on("traffic", (msg) => {
+
+                            document.getElementById('rx-packets').innerText = msg[0]["rx-packets-per-second"]+ " p/s";
+                            document.getElementById('tx-packets').innerText = msg[0]["tx-packets-per-second"]+" p/s";
+                            document.getElementById('rx-drops').innerText = msg[0]["rx-drops-per-second"]+ " p/s";
+                            document.getElementById('tx-drops').innerText = msg[0]["tx-drops-per-second"]+" p/s";
+                            document.getElementById('rx-error').innerText = msg[0]["rx-errors-per-second"]+" p/s";
+                            document.getElementById('tx-error').innerText = msg[0]["tx-errors-per-second"]+" p/s";
+                        })
+
+                        socket.on("download", (dwntraffic) => {
+                            document.getElementById('download').innerText = dwntraffic+" Mbps"
+                            line1.append(Date.now(), dwntraffic);
+                            smoothie.addTimeSeries(line1);
+                        })
+
+                        socket.on("upload", (uptraffic) => {
+                            document.getElementById('upload').innerText = uptraffic+" Mbps"
+                            line2.append(Date.now(), uptraffic);
+                            smoothie.addTimeSeries(line2);
+                        })
+                    </script>
+
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

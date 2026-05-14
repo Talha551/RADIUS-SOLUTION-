@@ -1,0 +1,504 @@
+<?php if(!defined('BASEPATH')) exit('No direct script access allowed');
+
+require APPPATH . 'libraries/crontab.php';
+require APPPATH . 'libraries/routeros_api.class.php';
+/**
+ * Class : Login (LoginController)
+ * Login class to control to authenticate user credentials and starts user's session.
+ * @author : Kishor Mali
+ * @version : 1.1
+ * @since : 15 November 2016
+ */
+class Other extends CI_Controller
+{
+    /**
+     * This is default constructor of the class
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        //$this->load->model('login_model');
+        $this->load->model('users_model');
+        $this->load->model('user_model');
+        $this->load->model('Invoices_model');
+        $this->load->model('Services_model');
+        $this->load->model('Other_model');
+        $this->load->model('login_model');
+        
+        $this->load->helper(array('form', 'url'));
+    }
+
+    /**
+     * Index Page for this controller.
+     */
+    public function index()
+    {
+        $this->isLoggedIn();
+    }
+    
+    /**
+     * This function used to check the user is logged in or not
+     */
+    function userGraph($userId = NULL)
+    {
+
+        if($userId == null)
+            {
+                redirect('https://login.pace-tel.com/user.php');
+            }
+            
+            $data['packages'] = $this->users_model->getResellerPackages();
+            $data['userInfo'] = $this->users_model->getUserInfo($userId);
+            $nasIP =  $this->user_model->getUsersNasInfo($userId);
+
+            $nasipaddress = $nasIP->nasipaddress;
+            $urlAddress = 'http://'.$nasipaddress.':8880/graphs/queue/<pppoe-'.$userId.'>/';
+
+            redirect($urlAddress);
+            
+            //$this->global['pageTitle'] = 'PaceTel : Edit User';
+            
+            //$this->loadViews("usergraph", $this->global, $data, NULL);
+    }
+
+    function loadViews($viewName = "", $headerInfo = NULL, $pageInfo = NULL, $footerInfo = NULL){
+
+        $this->load->view($viewName, $pageInfo);
+    }
+
+    function resetSessionAllUsers(){
+        $this->Reports_model->disconnectUserAccountUpdateAll();
+    }
+
+    public function postEasyPaisa(){
+
+        $this->load->helper('array');
+        $this->load->library('../controllers/invoices');
+        $this->invoices->userQuickRecharge("u2nasir3");
+
+        echo "TESTS";
+
+    }
+
+    function test(){
+        echo "Test working";
+    }
+
+
+    // Dynamic DNS Auto Update Function //
+    function nasUpdateDDNS()
+    {
+
+        $restartStatus = 0;
+
+        $result = $this->Other_model->getDDNSMapping();
+
+        if(!empty($result))
+        {
+            $row_count = 1;
+            foreach($result as $record)
+            {
+                $newDomainIP = gethostbyname($record->domain);
+                if($record->nasname <> $newDomainIP)
+                {
+                    $restartStatus = 1;
+                    $domain = $record->domain;
+                    $search[] = $record->nasname; $replace[] = $newDomainIP;
+                    $this->stringReplaceFile('/usr/local/etc/raddb/clients.conf', $search, $replace);
+
+                    $nasInfo = array('nasname'=>$newDomainIP);
+                    //$this->Other_model->updateNasToNewIP($nasInfo, $record->shortname, $record->nasname);
+                    $this->Other_model->updateDynamicNasTable($nasInfo, $record->shortname, $record->nasname);
+                }
+            }
+            $row_count++;
+        }
+
+        echo "Status to Restart : ".$restartStatus." ";
+
+    }
+
+    // Dynamic DNS File Update
+    function stringReplaceFile($file, $search, $replace){
+
+        if (!file_exists($file))
+        {
+            display_error('File does not exist: '.$file);
+        }
+        $handle = @fopen($file, 'r') or display_error('Could not open file for reading.');
+        $text = fread($handle, filesize($file));
+        fclose($handle);
+
+        $text = str_replace($search, $replace, $text);
+
+        $handle = @fopen($file, 'w') or display_error('Could not open file for writing.');
+        @fwrite($handle, $text) or display_error('Could not write to file.');
+        fclose($handle);
+        //echo "File updated";
+
+    }
+
+    function createCronJobs(){
+        // Create Cronjobs
+        $this->load->library('crontab');
+        $this->crontab->add_job('*/5 * * * *', 'run_scheduler.php');
+        //$this->crontab->add_job('0 */2 * * *', 'run_scheduler.php');
+    }
+
+    function tempCreateAlerts(){
+        
+        $this->Other_model->temp_table_create();
+    }
+
+    function display_error($error_text) {
+        die('<p style="color:red;font-weight:bold;">ERROR! '.$error_text.'</p>');
+    }
+
+    // This function is a audit fix for Voucher Owenership to change user ownership as per connected NAS
+    // This function dynamically change ownership of user as per connected NAS
+    function hotspot_users_fixowner($days){
+        $result = $this->Other_model->get_newCardActivation($days); 
+        foreach($result as $record)
+        {
+            $nasManagerGroup = $this->Other_model->get_nasmanager($record->nasipaddress);
+            if(empty($nasManagerGroup)){
+                // Check if Owner and Calling Station ID has any matching
+                $calling_id = $this->Other_model->get_callingStationID($record->username);
+                if(empty($calling_id)){
+                    $this->Other_model->updateVoucherOwner($record->username, $record->calledstationid, 0); // Manager Not Found in Calling Station ID
+                }else{
+                    $this->Other_model->updateVoucherOwner($record->username, $record->calledstationid, 1); // Try Manager from Dynamic Nas Entry Table
+                }
+            }else{
+                $this->Other_model->updateVoucherOwner($record->username, $nasManagerGroup->managername, 1); // Manager Found in Manager Group            }
+            }
+        }
+
+        $this->session->set_flashdata('success', 'Hotspot Prepaid Users Ownership checking completed for '.$days.' Days');
+        redirect('serieslist');
+
+        die('<p style="color:green;font-weight:bold;">Operation Completed! </p>');
+    }
+
+    function hotspot_users_addbydays($days){ // Trace users Online from number of Days given and cross check in Mikrotik to add it
+
+        $result = $this->Other_model->get_newCardActivation($days);
+        $this->bulkhotspotcall_api($result);
+
+        $this->session->set_flashdata('success', 'Users created in Mikrotik for '.$days.' Days');
+        redirect('serieslist');
+
+    }
+
+    function addMikrotikUser(){
+
+        $this->Other_model->updateUserOwnership();
+        $this->Other_model->addDynamicRecharge();
+
+        $result = $this->Other_model->getNewCardsNAS();
+
+        $this->bulkhotspotcall_api($result);
+
+    }
+
+    function bulkhotspotcall_api($result){
+
+        if(!empty($result))
+        {
+            foreach($result as $record)
+            {
+                $ddnsNasInfo = $this->Other_model->getDDNSMappingInfo($record->nasipaddress);
+                $userInfo = $this->users_model->getUserInfo($record->username, 2);
+
+                if(!empty($ddnsNasInfo) && !empty($userInfo)){
+
+                    $apiHost = gethostbyname($ddnsNasInfo->domain);
+                    if(empty($apiHost)){
+                        $apiHost = $record->nasname;
+                    }
+                    // Send request to add Hotspot User
+                    $this->api_addhotspotuser($apiHost, $ddnsNasInfo->apiuser, $ddnsNasInfo->apipasswd, $userInfo);
+                }
+
+                
+            }
+        }
+        
+    }
+
+    function api_addhotspotuser($apiHost, $apiuser, $apipasswd, $userInfo){
+
+        $API = new RouterosAPI();
+        $API->debug = true;
+
+        if ($API->connect($apiHost, $apiuser, $apipasswd)) {
+
+            // Trace All Existing Users
+            $API->write('/ip/hotspot/user/print', false);
+            $API->write('=.proplist=.id', false);
+            $API->write('?name='.$userInfo->username);
+
+            $A = $API->read();
+
+            // If not found then create HotSpot Users
+            if(empty($A)){
+
+                // Add New Voucher to HotSpot List
+                $API->comm("/ip/hotspot/user/add", array(
+                    "name"     => $userInfo->username,
+                    "password" => '',
+                    "comment"  => "Expired:".$userInfo->expiration,
+                ));
+
+                // After Creation Again Scan User and Disable It.
+                $API->write('/ip/hotspot/user/print', false);
+                $API->write('=.proplist=.id', false);
+                $API->write('?name='.$userInfo->username);
+                $B = $API->read();
+                $B = $B[0];
+                $API->write('/ip/hotspot/user/set', false);
+                $API->write('=.id='.$B['.id'], false);
+                $API->write('=enable=yes');
+                $API->read();
+
+                $this->Other_model->updateCardAPIAction($userInfo->username, 1); // Update Card api action field to 1
+
+            }
+
+            $API->disconnect();
+            //exit;
+
+        }
+
+
+    }
+
+    function dynamic_hotspotAccounts(){
+
+        $result = $this->Other_model->get_newCardActivation();
+
+        if(!empty($result))
+        {
+            foreach($result as $record)
+            {
+                // Condition for only to change ownership if Master
+                $masterInfo = $this->login_model->lisMasterManager($userInfo->owner);
+                if($masterInfo->managercount > 0){
+                    // Check if Calling Station ID of NAS match any manager name
+                    $callingStationManager = $this->Other_model->get_callingStationID($record->username);
+                    if(!empty($callingStationManager)){
+                        if($callingStationManager->callingstationid <> $userInfo->owner)
+                        {
+                            // If User Ownership is Master and Calling station ID match from Logs
+                            $this->Other_model->updateVoucherOwner($userInfo->username, $record->nasipaddress, $userInfo->owner);
+                        }else{
+                            $this->Other_model->updateVoucherOwner($userInfo->username, $record->nasipaddress);
+                        }
+                    }
+                }
+                // Create Invoice
+                $this->Other_model->addDynamicRecharge($userInfo->username);
+            }
+        }
+
+    }
+
+    // Function to Disable Expired Users Through API
+    function disableExpiredHotspotUsers($host = "", $username = "", $password = "") {
+
+        // Initialize the RouterOS API client
+        $API = new RouterosAPI();
+        //$API->debug = true;
+
+        if ($API->connect("192.168.101.69", "admin", "IslamAbad321")) {
+
+            // Fetch hotspot users
+            $users = $API->comm('/ip/hotspot/user/print');
+
+            $currentDate = new DateTime(); // Current date
+            //echo $currentDate->format('M/d/Y H:i:s');
+            //print_r($users);
+
+            foreach ($users as $user) {
+                if (isset($user['comment'])) {
+
+                    // Parse the date from the comment
+                    $commentDate = DateTime::createFromFormat('M/d/Y H:i:s', $user['comment']);
+    
+                    // Check if parsing was successful and the comment date is less than or equal to the current date
+                    if ($commentDate !== false && $commentDate <= $currentDate) {
+                        // Disable the user
+                        $API->comm('/ip/hotspot/user/set', array(
+                            '.id' => $user['.id'],
+                            'disabled' => 'yes',
+                        ));
+                        echo "Disabled user: " . $user['name'] . " (Expiry Date: " . $user['comment'] . ")<br>";
+                    }
+                }
+            }
+    
+            // Disconnect from the router
+            $API->disconnect();
+
+        } else {
+            echo "Failed to connect to the MikroTik Router.\n";
+        }
+    }
+
+    function hotspotlogin(){
+
+        $mac = $this->input->post('mac');
+        $ip = $this->input->post('ip');
+        $linkLogin = $this->input->post('link-login');
+        $linkLoginOnly = $this->input->post('link-login-only');
+        $identity = $this->input->post('identity');
+        $error = $this->input->post('error');
+
+        $data['mac'] = $mac;
+        $data['ip'] = $ip;
+        $data['linkLogin'] = $linkLogin;
+        $data['linkLoginOnly'] = $linkLoginOnly;
+        $data['error'] = $error;
+        $data['identity'] = $identity;
+
+        $mac = "58:6D:8F:97:8B:F1";
+
+        $nasRandomMacSetting = $this->login_model->getSettingInfo("master_dxb", 'CHECK-MAC');
+        if(!empty($nasRandomMacSetting)){
+            if($nasRandomMacSetting->status == 1){
+                preg_match('/('.substr($mac,1,1).')/', '26AE', $matches);
+
+                if(!empty($matches)){
+                    $this->load->view("loginhotspoterror", $data);
+                }else{
+                    $this->load->view("loginhotspot", $data);
+                }
+            }else{
+                $this->load->view("loginhotspot", $data);
+            }
+        }else{
+           $this->load->view("loginhotspot", $data);
+        }
+
+    }
+
+    function hotspotStatus(){
+
+        $username = $this->input->post("username");
+        $ip = $this->input->post("ip");
+        $bytesIn = $this->input->post("bytes-in-nice");
+        $bytesOut = $this->input->post("bytes-out-nice");
+        $upTime = $this->input->post("uptime");
+
+        $this->load->view("loginhotspotstatus", $data);
+
+    }
+
+    
+    public function validate_hotspotuser() {
+        $username = $this->input->post('username');
+        // Assume this method checks the username and optionally returns a password requirement
+        $userDetails = $this->users_model->validate_user($username);
+    
+        if ($userDetails) {
+            // Assuming $userDetails includes a 'mode' indicating password requirement
+            echo json_encode(['status' => 'success', 'message' => 'Username checked.', 'mode' => $userDetails->mode]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid username.']);
+        }
+    }
+
+    function validate_hotspotpassword($check_mode = 0){
+
+        $username = $this->input->post('username');
+        $password = $this->input->post('password');
+
+        $userDetails = $this->users_model->validate_user($username);
+        
+        // Assuming you have a model method to validate credentials
+        if($this->users_model->validate_user($username, $password)) {
+            //$this->Reports_model->disconnectUserAccountUpdate($username);
+            echo json_encode(['status' => 'success', 'message' => 'Valid credentials.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Invalid credentials.']);
+        }
+    }
+
+    function api_disconnect_request(){
+        
+        $this->load->view("Prepaid/apidisconnect", NULL);
+    }
+
+    function api_session_delete(){
+
+        $username = $this->input->post('username');
+        $password = $this->input->post('password');
+        
+        $record = $this->Other_model->get_callingStationID($username);
+        //print_r($record);
+        // Request to disconnect User
+        if(!empty($record))
+        {
+
+            $ddnsNasInfo = $this->Other_model->getDDNSMappingInfo($record->nasipaddress);
+            $userInfo = $this->users_model->getUserInfo($record->username, 2);
+
+            if(!empty($ddnsNasInfo) && !empty($userInfo)){
+
+                $apiHost = gethostbyname($ddnsNasInfo->domain);
+                //echo $apiHost." - ".$ddnsNasInfo->apiuser." - ".$ddnsNasInfo->apipasswd;
+
+                if(empty($apiHost)){
+                    $apiHost = $record->nasname;
+                }
+
+                $API = new RouterosAPI();
+                $API->debug = false;
+
+                if ($API->connect($apiHost, $ddnsNasInfo->apiuser, $ddnsNasInfo->apipasswd)) {
+
+                    $API->write('/ip/hotspot/active/print', false);
+                    $API->write('?user=' . $username, true);
+                    $activeSessions = $API->read();
+
+                    foreach ($activeSessions as $session) {
+                        $API->write('/ip/hotspot/active/remove', false);
+                        $API->write('=.id=' . $session['.id'], true);
+                        $API->read();
+                    }
+
+                    $API->disconnect();
+                    //exit;
+
+                }
+                
+                
+            }            
+        }
+
+        $this->load->view("Prepaid/apidisconnectreply", NULL);
+    }
+
+    /*if($restartStatus == 1){
+    //putenv('PATH=/root');
+    //$restartRadius = shell_exec('./radrestart.sh');
+    //echo "   Restart Status : ".$restartRadius;
+    //$restartStatus = 0;
+    //}
+
+    Shell Script To restart Radius
+    #!/bin/bash
+
+        curl http://127.0.0.1/Other/nasUpdateDDNS
+
+        if [ $(find //usr/local/etc/raddb -mmin -5 -type f -name "clients.conf" 2>/dev/null) ] ; then
+                echo " Radius Service Restarting "
+                service radiusd restart
+        else
+                echo "  No IP Changes Deducted "
+        fi
+    */
+
+}
+
+?>

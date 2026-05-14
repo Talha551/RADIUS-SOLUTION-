@@ -1,0 +1,418 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.bundle.min.js"></script>
+
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <h1>
+        <i class="fa fa-tachometer" aria-hidden="true"></i> Dashboard
+        <small>Control panel</small>
+      </h1>
+    </section>
+    
+    <section class="content">
+        <div class="row">
+            <div class="col-lg-3 col-xs-6">
+              <!-- small box -->
+              <div class="small-box bg-aqua">
+                <div class="inner">
+                  <h3><?php 
+                      header("Refresh: 30");
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+		      $curDate = date("y-m-d");
+                      $this->db->select('username');
+                      $this->db->from('rm_users');
+                      if($managername == 'admin'){
+                        $this->db->where('enableuser=1 and acctype=0i and expiration >"'.$curDate.'"');
+                      }
+                      else{
+                        if($this->ismaster > 0){ $this->db->where('enableuser=1 and acctype=0 and owner in (Select managername from rm_managers where mastername =  "'.$managername.'")'); }
+                        else
+                        { $this->db->where('enableuser=1 and acctype=0 and owner = "'.$managername.'"'); }
+                        
+                      }
+                      $total_customers = $this->db->count_all_results();
+                      echo $total_customers;
+                    ?></h3>
+                  <p>Total Customers</p>
+                </div>
+                <div class="icon">
+                  <i class="ion ion-bag"></i>
+                </div>
+                <a href="<?php echo base_url(); ?>usersListing" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+              </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+              <!-- small box -->
+              <div class="small-box bg-green">
+                <div class="inner">
+                  <h3>
+                    <?php 
+                      //$curDate = strtotime(date("d-m-Y"));
+                      $curDate = date("y-m-d");
+                      header("Refresh: 30");
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+                      $this->db->select('username');
+                      $this->db->from('radacct');
+                      $this->db->where('acctstoptime is null', null, false);
+                      //$this->db->where('acctstoptime>now() - interval 2 week');
+                      if($managername <> 'admin'){
+                        if($this->ismaster > 0){
+                          $this->db->where("username IN (Select username from rm_users where owner in (Select managername from rm_managers where mastername = '".$managername."'))", null, false);
+                        }
+                        else
+                        { $this->db->where("username IN (Select username from rm_users where owner='".$managername."')", null, false); }
+                      }
+                      $online_customers = $this->db->count_all_results();
+                      echo $online_customers;
+                    ?>
+                  </h3>
+                  <p>Online Customers</p>
+                </div>
+                <div class="icon">
+                  <i class="ion ion-stats-bars"></i>
+                </div>
+                <a href="<?php echo base_url(); ?>onlineusers" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+              </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+              <!-- small box -->
+              <div class="small-box bg-yellow">
+                <div class="inner">
+                <h3><?php echo $total_customers-$online_customers; ?></h3>
+                  <p>Offline Customers</p>
+                </div>
+                <div class="icon">
+                  <i class="ion ion-person-add"></i>
+                </div>
+                <a href="<?php echo base_url(); ?>userListing" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+              </div>
+            </div><!-- ./col -->
+            <div class="col-lg-3 col-xs-6">
+              <!-- small box -->
+              <div class="small-box bg-red">
+                <div class="inner">
+                <h3>
+                    <?php 
+                      //$curDate = strtotime(date("d-m-Y"));
+                      $curDate = date("y-m-d");
+                      header("Refresh: 30");
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+                      $this->db->select('username');
+                      $this->db->from('rm_users');
+                      if($managername == 'admin'){
+                        $this->db->where('enableuser=1 and acctype=0 and expiration <="'.$curDate.'"');
+                      }
+                      else{
+                        if($this->ismaster > 0){
+                          $this->db->where('enableuser=1 and acctype=0 and owner IN (Select managername from rm_managers where mastername = "'.$managername.'") and expiration <="'.$curDate.'"');
+                        }else
+                        { $this->db->where('enableuser=1 and acctype=0 and owner = "'.$managername.'" and expiration <="'.$curDate.'"'); }
+                      }
+
+                      $expired_users = $this->db->count_all_results();
+                      echo $expired_users;
+
+                      $this->db->select('username');
+                      $this->db->from('rm_users');
+                      if($managername == 'admin'){
+                        $this->db->where('enableuser=0 and acctype=0');
+                      }
+                      else{
+                        if($this->ismaster > 0){
+                          $this->db->where('enableuser=0 and acctype=0 and owner IN (Select managername from rm_managers where mastername = "'.$managername.'")');
+                        } else
+                        { $this->db->where('enableuser=0 and acctype=0 and owner = "'.$managername.'"'); }
+                      }
+                      $blocked_users = $this->db->count_all_results();
+                      echo "/".$blocked_users;
+
+                    ?>
+                  </h3>
+                  <p>Expired/Blocked Users</p>
+                </div>
+                <div class="icon">
+                  <i class="ion ion-pie-graph"></i>
+                </div>
+                <a href="#" class="small-box-footer">More info <i class="fa fa-arrow-circle-right"></i></a>
+              </div>
+            </div><!-- ./col -->
+          </div>
+
+          <div class="row">
+              <div class="col-md-3 col-sm-6 col-xs-12">
+                <div class="info-box">
+              <span class="info-box-icon bg-aqua"><i class="fa fa-money"></i></span>
+
+              <div class="info-box-content">
+              <span class="info-box-text">Balance</span>
+              <span class="info-box-number">
+              <?php 
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+                      $this->db->select_sum('amount');
+                      $this->db->from('tbl_invoices');
+                      $this->db->where('managername', $managername);
+                      //echo $this->db->count_all_results();
+                      $query = $this->db->get();
+                      $result = $query->row();
+                      if ($query->num_rows() > 0){
+                        echo $result->amount;
+                      } else {
+                          echo 0;
+                      }
+              ?>
+              </span>
+              </div>
+              </div>
+              </div>
+
+              <div class="col-md-3 col-sm-6 col-xs-12">
+              <div class="info-box">
+              <span class="info-box-icon bg-green"><i class="fa fa-shopping-cart"></i></span>
+
+              <div class="info-box-content">
+              <span class="info-box-text">Monthly Cost of Sales</span>
+              <span class="info-box-number">
+              <?php 
+                      $managername = $this->session->userdata ( 'name' );
+                      //Total Customers from Table
+                      $this->db->select_sum('costprice');
+                      $this->db->from('rm_users as A');
+                      $this->db->join('tbl_services as B', 'A.srvid = B.radsrvid','left');
+                      if($this->ismaster < 1){
+                          $this->db->where('A.owner', $managername);
+                          $this->db->where('B.managername', $managername);}
+                      else{
+                          $this->db->where('A.owner in (Select managername from rm_managers where mastername = "'.$managername.'")');
+                          $this->db->where('B.managername', $managername);
+                      }
+                      $this->db->where('A.enableuser', 1);
+                      $this->db->where('expiration > CURDATE() - INTERVAL 7 DAY');
+                      //echo $this->db->count_all_results();
+                      $query = $this->db->get();
+                      $result = $query->row();
+                      if ($query->num_rows() > 0){
+                        echo "Rs. ".$result->costprice;
+                      } else {
+                          echo 0;
+                      }
+              ?>
+              </span>
+              </div>
+              </div>
+              </div>
+
+              <?php 
+
+                  // $managername = $this->session->userdata ( 'name' );
+                  // $query = $this->db->query("SELECT round((((sum(`BaseTbl`.`acctoutputoctets`)/1024)/1024)/1024),0) as downloads, 
+                  //           round((((sum(`BaseTbl`.`acctinputoctets`)/1024)/1024)/1024),0) as Uploads 
+                  //           FROM `radacct` as `BaseTbl` LEFT JOIN `nas` as `NasTbl` ON `BaseTbl`.`nasipaddress` = `NasTbl`.`nasname` 
+                  //           LEFT JOIN `rm_users` as `UsrTbl` ON `BaseTbl`.`username` = `UsrTbl`.`username` WHERE `UsrTbl`.`owner` = '$managername' 
+                  //           AND isnull(BaseTbl.acctstoptime) = true limit 1");
+                  // $row   = $query->row();
+
+                  
+
+              ?>
+
+              <?php 
+
+                      //Total Customers from Table
+                      $this->db->select_sum('amount_paid');
+                      $this->db->from('rm_users as A');
+                      $this->db->join('tbl_eptransaction as B', 'A.username = B.username','left');
+
+                      if($managername <> 'admin'){  $this->db->where('A.owner', $managername); }
+                      $this->db->where('month(B.createdDtm) = month(CURDATE())');
+                      $this->db->where('year(B.createdDtm) = year(CURDATE())');
+                      //echo $this->db->count_all_results();
+                      $query = $this->db->get();
+                      $result = $query->row();
+
+              ?>
+
+              <div class="col-md-3 col-sm-6 col-xs-12">
+              <div class="info-box">
+              <span class="info-box-icon bg-yellow"><i class="fa fa-cloud-download"></i></span>
+              <div class="info-box-content">
+              <span class="info-box-text">Easy Paisa Collection</span>
+              <span class="info-box-number">Rs. 
+                <?php if ($query->num_rows() > 0){
+                        echo $result->amount_paid;
+                      } else {
+                          echo 0;
+                      } ?></span>
+              </div>
+              </div>
+              </div>
+
+              <div class="col-md-3 col-sm-6 col-xs-12">
+              <div class="info-box">
+              <span class="info-box-icon bg-red"><i class="fa fa-cloud-upload"></i></span>
+
+              <div class="info-box-content">
+              <span class="info-box-text">Active Session Uploads</span>
+              <span class="info-box-number"><?php //echo $row->Uploads; ?> GBs</span>
+              </div>
+              </div>
+              </div>
+          </div>
+
+          <div class="box box-primary">
+
+
+        <div class="col-md-6">
+            <div class="box">
+
+                <div class="box-header with-border">
+                    <h3 class="box-title">Customer Trends</h3>
+
+
+                </div>
+                <div class="box-body">
+                    <div class="chart">
+                        <canvas id="bar-chart-grouped" width="700" height="300"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+            <div class="box">
+
+                <div class="box-header with-border">
+                    <h3 class="box-title">Customers Status</h3>
+                </div>
+                <div class="box-body">
+                    <div class="chart">
+                        <canvas id="pie-chart" width="700" height="300"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+    </div>
+  </section>
+
+<?php 
+
+    $managername = $this->session->userdata ( 'name' );
+    
+    //$query = $this->db->query("SELECT date(acctstoptime) as date, round((((sum(`BaseTbl`.`acctoutputoctets`)/1024)/1024)/1024),0) as downloads, 
+    //          round((((sum(`BaseTbl`.`acctinputoctets`)/1024)/1024)/1024),0) as Uploads 
+    //          FROM `radacct` as `BaseTbl` LEFT JOIN `nas` as `NasTbl` ON `BaseTbl`.`nasipaddress` = `NasTbl`.`nasname` 
+    //          LEFT JOIN `rm_users` as `UsrTbl` ON `BaseTbl`.`username` = `UsrTbl`.`username` WHERE `UsrTbl`.`owner` = '$managername' 
+    //          and acctstoptime > now() - INTERVAL 6 day AND isnull(BaseTbl.acctstoptime) = false 
+    //          GROUP BY date");
+
+    //$query = $this->db->query("select MONTH(acctstarttime) as month, sum(HOUR(TIMEDIFF(acctstarttime, acctstoptime)) / 24) as days, 
+    //          round((((sum(acctinputoctets)/1024)/1024)/1024),0) as uploads, 
+    //          round((((sum(acctoutputoctets)/1024)/1024)/1024),0) as downloads 
+    //          from radacct where acctstarttime > now() - INTERVAL 5 month 
+    //          and username in (select username from rm_users where owner = '$managername') and isnull(acctstoptime)=false 
+    //          group by month order by acctstarttime");
+
+
+// *************** ENABLE FROM HERE FOR GRAPH *******************************
+
+    if($this->ismaster > 0 || $managername == 'admin'){ 
+        $where = " and owner IN (select managername from rm_managers where mastername = '".$managername."') "; }
+        else{ $where = " and owner = '".$managername."'"; }
+
+    $query = $this->db->query("select month(createdon) as month, count(username) as newcustomers, count(if(enableuser=0,1,NULL)) as disabled, 
+              count(if(expiration <= current_date(),1,null)) as expired  from rm_users 
+              where month(createdon) <= Month(current_date()) and month(createdon) >= MONTH(CURRENT_DATE())-5 
+              ".$where." group by month(createdon)");
+
+    $row   = $query->result();
+
+    $newcustomers = "";
+    $blocked = "";
+    $months = "";
+
+    if(!empty($row))
+    {
+        $row_count = 1;
+        foreach($row as $record)
+        { 
+          if(!empty($newcustomers)){
+            $months = $months . ", ".$record->month;
+            $newcustomers = $newcustomers . ", " . $record->newcustomers;
+            $blocked = $blocked . ", " . $record->disabled;
+          }
+          else
+          {
+            $months = $record->month;
+            $newcustomers = $record->newcustomers;
+            $blocked = $record->disabled;
+          }
+          
+
+          $row_count++;
+        }
+    }
+                          
+
+?>
+
+<script type="text/javascript">
+
+    today = new Date();
+    var dd = today.getDate();
+
+    new Chart(document.getElementById("bar-chart-grouped"), {
+        type: 'bar',
+        data: {
+        labels: [<?php echo $months; ?>],
+        datasets: [
+            {
+            label: "New",
+            backgroundColor: "#3e95cd",
+            data: [<?php echo $newcustomers; ?>]
+            }, {
+            label: "Blocked",
+            backgroundColor: "#8e5ea2",
+            data: [<?php echo $blocked; ?>]
+            }
+        ]
+        },
+        options: {
+        title: {
+            display: true,
+            text: 'Monthly Customer Trends'
+        }
+        }
+    });
+
+    new Chart(document.getElementById("pie-chart"), {
+    type: 'pie',
+    data: {
+      labels: ["Total", "expired", "blocked"],
+      datasets: [
+        {
+          label: "Customers (Count)",
+          backgroundColor: ["#3e95cd", "#8e5ea2","#c45850"],
+          data: [<?php echo $total_customers ?>,<?php echo $expired_users ?>,<?php echo $blocked_users ?>,]
+        }
+      ]
+    },
+    options: {
+      title: {
+        display: true,
+        text: 'Current Users Status (Live)'
+      }
+    }
+    });
+
+
+
+</script>

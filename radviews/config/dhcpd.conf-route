@@ -1,0 +1,31 @@
+#
+# DHCP Server Configuration file for routing mode CMTS
+#
+
+authoritative;
+option domain-name "localdomain";
+option domain-name-servers 8.8.8.8;
+option time-servers 192.53.103.108;
+ddns-update-style none;
+min-lease-time 3600;
+default-lease-time 3600;
+max-lease-time 3600;
+log-facility local6;
+
+# interface eth0
+subnet 192.168.0.0 netmask 255.255.255.0 {
+}
+
+# cm
+subnet 10.0.0.0 netmask 255.255.0.0 {
+    option routers 10.0.0.1;
+}
+
+# cpe
+shared-network cpe {
+    subnet 10.15.0.0 netmask 255.255.255.0 {
+        option routers 10.15.0.1;
+        range dynamic-bootp 10.15.0.2 10.15.0.254;
+    }
+}
+
