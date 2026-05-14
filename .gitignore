@@ -1,0 +1,69 @@
+# ------------------------------
+# Secrets and environment files
+# ------------------------------
+.env
+.env.*
+!.env.example
+*.env.local
+*.secret
+*.secrets
+
+# API keys / credentials / certificates
+*.key
+*.pem
+*.p12
+*.pfx
+*.crt
+*.csr
+*.der
+*.jks
+*.keystore
+id_rsa
+id_dsa
+id_ecdsa
+id_ed25519
+
+# ------------------------------
+# App-specific sensitive files
+# ------------------------------
+radcontroller/Login.php.htpasswd
+radcontroller/Login.php.htaccess
+radcontroller/api/Whatsapi.php
+radviews/config/*_cfg.php
+
+# ------------------------------
+# Dependency and build folders
+# ------------------------------
+node_modules/
+dist/
+build/
+coverage/
+
+# ------------------------------
+# Logs and runtime files
+# ------------------------------
+*.log
+logs/
+*.pid
+*.tmp
+*.temp
+
+# ------------------------------
+# Backup and editor swap files
+# ------------------------------
+*.bak
+*.backup
+*.old
+*.orig
+*.swp
+*.swo
+
+# ------------------------------
+# OS and editor junk
+# ------------------------------
+.DS_Store
+._*
+Thumbs.db
+Desktop.ini
+.vscode/
+.idea/
